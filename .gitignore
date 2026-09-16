@@ -1,0 +1,35 @@
+# --- Secrets / local environment config ---
+# .env holds real API keys (OpenRouter, etc.) -- never committed.
+# .env.example is the tracked template (no real values).
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+
+# --- Python (backend) ---
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+backend/.pytest_cache/
+
+# Validation Agent's shared temp dir (app/agents/validation.py) -- always
+# emptied by shutil.rmtree after each sandboxed run; keep the directory
+# itself (via .gitkeep) but never its transient contents.
+backend/.sandbox_tmp/*
+!backend/.sandbox_tmp/.gitkeep
+
+# --- Node / Next.js (frontend) ---
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+npm-debug.log*
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

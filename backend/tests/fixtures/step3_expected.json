@@ -1,0 +1,83 @@
+{
+  "changelog_events": [
+    {
+      "key": "legacy_call",
+      "api_name": "oldapi",
+      "version_from": "1.x",
+      "version_to": "2.0",
+      "change_type": "deprecation",
+      "old_signature": "oldapi.legacy_call",
+      "new_signature": "oldapi.new_call"
+    },
+    {
+      "key": "old_thing",
+      "api_name": "oldapi",
+      "version_from": "1.x",
+      "version_to": "2.0",
+      "change_type": "removal",
+      "old_signature": "oldapi.old_thing",
+      "new_signature": "oldapi.new_thing"
+    }
+  ],
+  "matches": [
+    {
+      "file_path": "service_a.py",
+      "matched_symbol": "legacy_call",
+      "line_start": 7,
+      "line_end": 7,
+      "confidence_tier": "high",
+      "changelog_event_key": "legacy_call"
+    },
+    {
+      "file_path": "service_a.py",
+      "matched_symbol": "legacy_call",
+      "line_start": 11,
+      "line_end": 11,
+      "confidence_tier": "high",
+      "changelog_event_key": "legacy_call"
+    },
+    {
+      "file_path": "service_b.py",
+      "matched_symbol": "legacy_call",
+      "line_start": 7,
+      "line_end": 7,
+      "confidence_tier": "medium",
+      "changelog_event_key": "legacy_call"
+    },
+    {
+      "file_path": "multi_match.py",
+      "matched_symbol": "legacy_call",
+      "line_start": 12,
+      "line_end": 12,
+      "confidence_tier": "high",
+      "changelog_event_key": "legacy_call"
+    },
+    {
+      "file_path": "multi_match.py",
+      "matched_symbol": "old_thing",
+      "line_start": 16,
+      "line_end": 16,
+      "confidence_tier": "high",
+      "changelog_event_key": "old_thing"
+    },
+    {
+      "file_path": "utils/helpers.py",
+      "matched_symbol": "legacy_call",
+      "line_start": 15,
+      "line_end": 15,
+      "confidence_tier": "medium",
+      "changelog_event_key": "legacy_call"
+    },
+    {
+      "file_path": "dynamic_dispatch.py",
+      "matched_symbol": "legacy_call",
+      "line_start": 13,
+      "line_end": 13,
+      "confidence_tier": "low",
+      "changelog_event_key": "legacy_call"
+    }
+  ],
+  "zero_match_files": [
+    "unrelated.py"
+  ]
+}

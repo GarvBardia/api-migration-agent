@@ -1,0 +1,192 @@
+[
+  {
+    "case": "01",
+    "library": "OpenAI SDK",
+    "change": "ChatCompletion.create -> client.chat.completions.create",
+    "api_name": "realworld-case01-0fca99",
+    "expected_scanner_result": "MISS (documented two-level-chain scanner limitation)",
+    "run_id": "66c74a43-a475-4f3c-a46f-2326c16b37d1",
+    "elapsed_seconds": 3.5,
+    "outcome": "completed",
+    "file_tasks": []
+  },
+  {
+    "case": "02",
+    "library": "OpenAI SDK",
+    "change": "Embedding.create -> client.embeddings.create",
+    "api_name": "realworld-case02-9be47b",
+    "expected_scanner_result": "MISS (documented two-level-chain scanner limitation)",
+    "run_id": "3ba84cc8-fc9d-4b15-b973-d453e1e2e610",
+    "elapsed_seconds": 3.0,
+    "outcome": "completed",
+    "file_tasks": []
+  },
+  {
+    "case": "03",
+    "library": "pandas",
+    "change": "pandas.io.json.json_normalize -> pandas.json_normalize",
+    "api_name": "realworld-case03-62d43f",
+    "expected_scanner_result": "MATCH",
+    "run_id": "dd0c48b8-3c33-45d2-86fd-a36ef5931731",
+    "elapsed_seconds": 126.6,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "needs_review",
+        "confidence_score": 0.95,
+        "test_pass_count": 0,
+        "test_fail_count": 3,
+        "retry_count": 3,
+        "failure_reason": "pytest reported 0 failure(s) but no per-test detail was found in the report (pass_count=0)"
+      }
+    ]
+  },
+  {
+    "case": "04",
+    "library": "pandas",
+    "change": "pandas.SparseDataFrame removed -> .sparse accessor",
+    "api_name": "realworld-case04-23fae2",
+    "expected_scanner_result": "MATCH",
+    "run_id": "f498653c-1a8b-46c4-ae42-4d1895234372",
+    "elapsed_seconds": 6.1,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "needs_review",
+        "confidence_score": 0.75,
+        "test_pass_count": 1,
+        "test_fail_count": 0,
+        "retry_count": 0,
+        "failure_reason": null
+      }
+    ]
+  },
+  {
+    "case": "05",
+    "library": "NumPy",
+    "change": "numpy.float removed -> builtin float",
+    "api_name": "realworld-case05-cee863",
+    "expected_scanner_result": "MATCH",
+    "run_id": "4aa6ec5d-2038-4048-9e45-eaeb8e3d9847",
+    "elapsed_seconds": 6.0,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "needs_review",
+        "confidence_score": 0.75,
+        "test_pass_count": 1,
+        "test_fail_count": 0,
+        "retry_count": 0,
+        "failure_reason": null
+      }
+    ]
+  },
+  {
+    "case": "06",
+    "library": "Pydantic",
+    "change": "@validator -> @field_validator",
+    "api_name": "realworld-case06-2f0d60",
+    "expected_scanner_result": "MATCH",
+    "run_id": "3f6a2039-440f-4b39-a1f2-69a41599cef3",
+    "elapsed_seconds": 45.3,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "needs_review",
+        "confidence_score": 0.95,
+        "test_pass_count": 0,
+        "test_fail_count": 0,
+        "retry_count": 0,
+        "failure_reason": "old_code_snippet no longer matches the real file at service.py:11-11. Expected None, found '    @validator(\"name\")'. The file may have changed since Step 3 scanned it, or line_start/line_end is misaligned -- not applying a guessed patch."
+      }
+    ]
+  },
+  {
+    "case": "07",
+    "library": "Pydantic",
+    "change": "parse_obj_as -> TypeAdapter(...).validate_python",
+    "api_name": "realworld-case07-50c645",
+    "expected_scanner_result": "MATCH",
+    "run_id": "03c42273-09c0-4d6f-80c0-1c868b97cfeb",
+    "elapsed_seconds": 48.2,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "needs_review",
+        "confidence_score": 1.0,
+        "test_pass_count": 1,
+        "test_fail_count": 1,
+        "retry_count": 1,
+        "failure_reason": "LLM provider error: OpenRouter response did not contain a propose_edit tool call (message={'role': 'assistant', 'content': None, 'refusal': None, 'reasoning': 'The user has provided a code snippet that needs to be migrated from `pydantic.parse_obj_as` to `pydantic.TypeAdapter(...).validate_python`. They note that a previous attempt failed because `pydantic` was not defined. So we need to propose a corrected code.\\n\\nThe code to migrate is:\\n\\n```python\\n    return parse_obj_as(List[int], data)\\n```\\n\\nThe error indicates that we need to import pydantic. In the file, presumably, the import is missing. The original code likely used `from pydantic import parse_obj_as`, or maybe `import pydantic` and then `pydantic.parse_obj_as`. But the error is that `pydantic` is not defined, implying they used `pydantic.TypeAdapter` but didn\\'t import pydantic.\\n\\nThe minimal fix is to import pydantic at the top, or import TypeAdapter. The call site is `pydantic.TypeAdapter(List[int]).validate_python(data)`. So we need to import pydantic (or import TypeAdapter). Let\\'s see what context we have. There\\'s no surrounding code shown. The user\\'s code snippet includes only the line `return parse_obj_as(List[int], data)`. We need to propose a replacement. The key is that `pydantic` should be imported or we need to import TypeAdapter.\\n\\nThe error says `NameError: name \\'pydantic\\' is not defined`. So the call `pydantic.TypeAdapter` raises error because pydantic wasn\\'t imported. So we need to make sure that `pydantic` is available. Could be they already imported `pydantic` somewhere else in the file. But the test failure indicates that `pydantic` is not defined. So the fix might be either to import pydantic at the top of the file, or import TypeAdapter directly, and adjust usage accordingly.\\n\\nThe migration from `pydantic.parse_obj_as` to `pydantic.TypeAdapter` suggests that we could either import TypeAdapter: `from pydantic import TypeAdapter`, and then use `TypeAdapter(List[int]).validate_python(data)`. Or import pydantic: `import pydantic` and use `pydantic.TypeAdapter`.\\n\\nWhich is more appropriate? It depends on the rest of the file. However, we cannot see the rest of the file. We need to propose a minimal correct replacement. Since the error is due to missing import of `pydantic`, we could either modify the call to import TypeAdapter directly and not need `pydantic`. That would avoid the NameError. Usually it\\'s better to import the class directly: `from pydantic import TypeAdapter`. Then the call becomes `TypeAdapter(List[int]).validate_python(data)`. This would not need `pydantic` in the code.\\n\\nThus we can propose:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut careful: The code may already have imports at top; we might not want to re-import inside function if it\\'s not needed. But we could also modify the top-level import: maybe the file currently has `from pydantic import parse_obj_as`, and they need to add `from pydantic import TypeAdapter`. However, we are only asked to propose the replacement for the call site. The surrounding code style is to preserve imports in their location. If we propose to change just the call site, we might need to add a `import pydantic` at top. But the user says \"Do not repeat the same mistake\" and test failure is due to NameError: name \\'pydantic\\' is not defined. So the attempt used `pydantic.TypeAdapter` without importing pydantic. So the minimal fix is to ensure pydantic is imported. If we modify the code to import pydantic at top, that solves it. But we need to propose only the call site? The instructions: \"You are a precise code-migration assistant. You are given one Python call site that uses a deprecated/changed API symbol. Propose the minimal correct replacement code for that call site given the new signature, and call the propose_edit tool with your answer. Do not explain in prose outside the tool call. Preserve the surrounding code style and only change what the signature change requires.\"\\n\\nSo we should propose a code snippet that replaces the call site. However, if the call site error is due to missing import, maybe the surrounding code has the imports already. Perhaps the original file had `from pydantic import parse_obj_as`. To replace that, we could import TypeAdapter instead. But we cannot see the imports. However, we can propose a change at call site only, possibly with a local import. But adding import inside function may be unusual. Usually imports are at top of file. But we cannot modify top-level imports if we don\\'t know if they exist. But maybe it\\'s acceptable to modify imports at the top of the file. However, the tool expects a \"new_code\" for the call site. The previous attempt was `return pydantic.TypeAdapter(List[int]).validate_python(data)`. That was the call site replacement. But it failed because `pydantic` wasn\\'t imported. The fix would be to either add `import pydantic` at the top, or replace with `TypeAdapter(List[int])`. Since the call site doesn\\'t have the import, maybe the import was originally `from pydantic import parse_obj_as`. So we might need to replace that import as well. But the instructions say we are given one Python call site. They want the replacement for that call site. Typically in these migrations, the import may be changed separately (maybe in a separate commit). But it\\'s okay to include import changes in the call site replacement? Usually the call site is the line that uses the deprecated API. If we change the import, that\\'s not the call site. But to make the call site work, we need to change the import. The instructions: \"Preserve the surrounding code style and only change what the signature change requires.\" So we only need to change the call signature, not import changes. However, the previous attempt included `pydantic.TypeAdapter`. That is a direct call to the new API but didn\\'t import pydantic. If the original file imported pydantic globally, then `pydantic.TypeAdapter` would work. However, error shows `pydantic` not defined. So original likely imported `from pydantic import parse_obj_as`. In that case, `pydantic` wasn\\'t imported, causing NameError. So we need to change import, not just call site. But instructions say only change the signature. However, it\\'s ambiguous. But given the test failure, the solution is to import pydantic or TypeAdapter.\\n\\nGiven the user states \"A previous attempt at this migration was tried and failed validation. Do not repeat the same mistake\", the previous attempt was using `pydantic.TypeAdapter` without import. So we need to fix that. It could be solved by importing pydantic at the top, but that would be a separate change from call site. However, we can also adjust the call to use `TypeAdapter` directly, assuming we import it. That still needs an import. But we could combine import inside the function. It is generally discouraged but can be done. However, the instruction \"Preserve the surrounding code style and only change what the signature change requires\" suggests we should not add an import if it wasn\\'t there originally. But original likely had import of parse_obj_as. That import could be replaced with import of TypeAdapter. So we might need to adjust import accordingly.\\n\\nBut the user only gave the code snippet. They might expect us to propose a corrected call site that also includes appropriate import. Many similar tasks involve modifying the import in the same commit. However, the instructions are somewhat contradictory: \"Only change what the signature change requires.\" Yet the call site changed also changes the need for imports. But maybe the imports are already present in the file but we don\\'t know. However, we can check: The previous new_code_snippet used `pydantic.TypeAdapter`. The failure was that pydantic is not defined. That suggests that there is no import of pydantic. So we need to add import for pydantic. But which import? It could be \"import pydantic\" at the top, or \"from pydantic import TypeAdapter\". The import of `parse_obj_as` originally may have been present. So we need to modify that import to import TypeAdapter instead. But the tool expects a replacement for the call site, not for the import statement. But we could include the import as part of the change because it\\'s needed.\\n\\nGiven that the migration note is about replacing parse_obj_as with TypeAdapter(Type).validate_python. So the fix is to change parse_obj_as to TypeAdapter. So the code becomes:\\n\\n```python\\nfrom pydantic import TypeAdapter\\n\\nreturn TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut we don\\'t know if there is already a `from pydantic import parse_obj_as`. Could be the file originally has `from pydantic import parse_obj_as, List`. Actually, List is from typing. So we might need to adjust imports.\\n\\nWe can search for typical file structure. The test file mentions parse_int_list function. The failing test indicates a function parse_int_list is defined. That function uses pydantic. So let\\'s assume service.py contains something like:\\n\\n```python\\nfrom typing import List\\nfrom pydantic import parse_obj_as\\n\\ndef parse_int_list(data):\\n    return parse_obj_as(List[int], data)\\n```\\n\\nThus, we need to replace that with:\\n\\n```python\\nfrom typing import List\\nfrom pydantic import TypeAdapter\\n\\ndef parse_int_list(data):\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut maybe there are other imports, but we only need to change those.\\n\\nGiven that we are asked to propose the replacement for the call site, we should provide just the new line(s) that replace parse_obj_as call. However, we could also include the import change, as that is needed for the call to work. The tool expects us to call propose_edit with new_code and rationale. The new_code should be the corrected code snippet for the call site, maybe including necessary imports if they are part of the call site. The instructions say \"only change what the signature change requires.\" But I think we should change the call and also import needed symbol.\\n\\nThus, I think the appropriate new_code would be:\\n\\n```python\\nfrom pydantic import TypeAdapter\\n\\nreturn TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut we need to preserve surrounding code style. If the original file had a function definition and within it a return statement, we need to keep indentation. The original code snippet includes an indentation (likely 4 spaces). The user snippet shows:\\n\\n```python\\n    return parse_obj_as(List[int], data)\\n```\\n\\nSo indentation of 4 spaces. The new_code should preserve that indentation.\\n\\nThus final new_code should be:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut that import statement inside the function is unusual. More typical is to have import at top of file. However, we could consider the original file had import at top: `from pydantic import parse_obj_as`. So we need to change that import to import TypeAdapter instead, i.e.:\\n\\n```python\\nfrom pydantic import TypeAdapter\\n```\\n\\nand keep the function unchanged. But the call site remains:\\n\\n```python\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nThus we need to adjust two things: import and call. The tool\\'s propose_edit expects a \"new_code\" for the given call site. It might be applied to the exact location (the line with return). The import change might be separate. But perhaps they want to replace the whole function block. However, the instructions say \"You are given one Python call site that uses a deprecated/changed API symbol.\" So the call site is the return line. We should replace that line. But the import change is separate. However, the error is NameError for pydantic because it\\'s missing import. So they might want to also adjust import in the same commit. But the tool might have a separate place for import changes; but we cannot see that. The user likely expects us to propose a new code snippet for the call site that includes the necessary import. Maybe they will manually apply import later.\\n\\nAlternatively, we could import pydantic at the call site:\\n\\n```python\\n    import pydantic\\n\\n    return pydantic.TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut that still suffers from the same error if not imported earlier. But if we import pydantic inside function, then `pydantic` is defined. The previous attempt had `pydantic.TypeAdapter` but no import. So adding `import pydantic` before that line would fix NameError. However, the new code should preserve surrounding style. Typically imports are at top. But we could put import inside function, but it\\'s not typical. However, to keep changes minimal and only change call site, we could simply add import statement before the return line, within function.\\n\\nThus new_code could be:\\n\\n```python\\n    import pydantic\\n\\n    return pydantic.TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut we could also use `from pydantic import TypeAdapter` before the return. But then we don\\'t need `pydantic` prefix. That may be more idiomatic. So we could do:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut note that we also need List to be imported. It likely is already imported from typing. The original snippet includes `List[int]`, so we assume List is imported. So adding `from pydantic import TypeAdapter` is fine.\\n\\nThus final answer: propose_edit with new_code that includes import and return line.\\n\\nNow we need to think about the function name parse_int_list. Actually the test shows parse_int_list. But the code snippet we have is generic: return parse_obj_as(List[int], data). It might be inside parse_int_list function. So the new_code should preserve indentation. So we need to propose:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nMake sure to preserve indentation: likely 4 spaces for return line; the import line should also be at same indentation? Usually imports are at module level, not inside function. But given they want to preserve surrounding style, we might not want to introduce import inside function. So perhaps we should not include import. Instead, we should change the call site only, assuming the import will be fixed elsewhere. But error indicates missing import. Could be they used `from pydantic import parse_obj_as` originally. So we need to change that import to import TypeAdapter instead. But that change is not at the call site, it\\'s at import statement. However, they might have not imported parse_obj_as from pydantic, but used `pydantic.parse_obj_as` originally. Actually, we need to infer the original file. The test snippet shows:\\n\\n```\\nservice.py:5: \\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _', 'reasoning_details': [{'type': 'reasoning.text', 'text': 'The user has provided a code snippet that needs to be migrated from `pydantic.parse_obj_as` to `pydantic.TypeAdapter(...).validate_python`. They note that a previous attempt failed because `pydantic` was not defined. So we need to propose a corrected code.\\n\\nThe code to migrate is:\\n\\n```python\\n    return parse_obj_as(List[int], data)\\n```\\n\\nThe error indicates that we need to import pydantic. In the file, presumably, the import is missing. The original code likely used `from pydantic import parse_obj_as`, or maybe `import pydantic` and then `pydantic.parse_obj_as`. But the error is that `pydantic` is not defined, implying they used `pydantic.TypeAdapter` but didn\\'t import pydantic.\\n\\nThe minimal fix is to import pydantic at the top, or import TypeAdapter. The call site is `pydantic.TypeAdapter(List[int]).validate_python(data)`. So we need to import pydantic (or import TypeAdapter). Let\\'s see what context we have. There\\'s no surrounding code shown. The user\\'s code snippet includes only the line `return parse_obj_as(List[int], data)`. We need to propose a replacement. The key is that `pydantic` should be imported or we need to import TypeAdapter.\\n\\nThe error says `NameError: name \\'pydantic\\' is not defined`. So the call `pydantic.TypeAdapter` raises error because pydantic wasn\\'t imported. So we need to make sure that `pydantic` is available. Could be they already imported `pydantic` somewhere else in the file. But the test failure indicates that `pydantic` is not defined. So the fix might be either to import pydantic at the top of the file, or import TypeAdapter directly, and adjust usage accordingly.\\n\\nThe migration from `pydantic.parse_obj_as` to `pydantic.TypeAdapter` suggests that we could either import TypeAdapter: `from pydantic import TypeAdapter`, and then use `TypeAdapter(List[int]).validate_python(data)`. Or import pydantic: `import pydantic` and use `pydantic.TypeAdapter`.\\n\\nWhich is more appropriate? It depends on the rest of the file. However, we cannot see the rest of the file. We need to propose a minimal correct replacement. Since the error is due to missing import of `pydantic`, we could either modify the call to import TypeAdapter directly and not need `pydantic`. That would avoid the NameError. Usually it\\'s better to import the class directly: `from pydantic import TypeAdapter`. Then the call becomes `TypeAdapter(List[int]).validate_python(data)`. This would not need `pydantic` in the code.\\n\\nThus we can propose:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut careful: The code may already have imports at top; we might not want to re-import inside function if it\\'s not needed. But we could also modify the top-level import: maybe the file currently has `from pydantic import parse_obj_as`, and they need to add `from pydantic import TypeAdapter`. However, we are only asked to propose the replacement for the call site. The surrounding code style is to preserve imports in their location. If we propose to change just the call site, we might need to add a `import pydantic` at top. But the user says \"Do not repeat the same mistake\" and test failure is due to NameError: name \\'pydantic\\' is not defined. So the attempt used `pydantic.TypeAdapter` without importing pydantic. So the minimal fix is to ensure pydantic is imported. If we modify the code to import pydantic at top, that solves it. But we need to propose only the call site? The instructions: \"You are a precise code-migration assistant. You are given one Python call site that uses a deprecated/changed API symbol. Propose the minimal correct replacement code for that call site given the new signature, and call the propose_edit tool with your answer. Do not explain in prose outside the tool call. Preserve the surrounding code style and only change what the signature change requires.\"\\n\\nSo we should propose a code snippet that replaces the call site. However, if the call site error is due to missing import, maybe the surrounding code has the imports already. Perhaps the original file had `from pydantic import parse_obj_as`. To replace that, we could import TypeAdapter instead. But we cannot see the imports. However, we can propose a change at call site only, possibly with a local import. But adding import inside function may be unusual. Usually imports are at top of file. But we cannot modify top-level imports if we don\\'t know if they exist. But maybe it\\'s acceptable to modify imports at the top of the file. However, the tool expects a \"new_code\" for the call site. The previous attempt was `return pydantic.TypeAdapter(List[int]).validate_python(data)`. That was the call site replacement. But it failed because `pydantic` wasn\\'t imported. The fix would be to either add `import pydantic` at the top, or replace with `TypeAdapter(List[int])`. Since the call site doesn\\'t have the import, maybe the import was originally `from pydantic import parse_obj_as`. So we might need to replace that import as well. But the instructions say we are given one Python call site. They want the replacement for that call site. Typically in these migrations, the import may be changed separately (maybe in a separate commit). But it\\'s okay to include import changes in the call site replacement? Usually the call site is the line that uses the deprecated API. If we change the import, that\\'s not the call site. But to make the call site work, we need to change the import. The instructions: \"Preserve the surrounding code style and only change what the signature change requires.\" So we only need to change the call signature, not import changes. However, the previous attempt included `pydantic.TypeAdapter`. That is a direct call to the new API but didn\\'t import pydantic. If the original file imported pydantic globally, then `pydantic.TypeAdapter` would work. However, error shows `pydantic` not defined. So original likely imported `from pydantic import parse_obj_as`. In that case, `pydantic` wasn\\'t imported, causing NameError. So we need to change import, not just call site. But instructions say only change the signature. However, it\\'s ambiguous. But given the test failure, the solution is to import pydantic or TypeAdapter.\\n\\nGiven the user states \"A previous attempt at this migration was tried and failed validation. Do not repeat the same mistake\", the previous attempt was using `pydantic.TypeAdapter` without import. So we need to fix that. It could be solved by importing pydantic at the top, but that would be a separate change from call site. However, we can also adjust the call to use `TypeAdapter` directly, assuming we import it. That still needs an import. But we could combine import inside the function. It is generally discouraged but can be done. However, the instruction \"Preserve the surrounding code style and only change what the signature change requires\" suggests we should not add an import if it wasn\\'t there originally. But original likely had import of parse_obj_as. That import could be replaced with import of TypeAdapter. So we might need to adjust import accordingly.\\n\\nBut the user only gave the code snippet. They might expect us to propose a corrected call site that also includes appropriate import. Many similar tasks involve modifying the import in the same commit. However, the instructions are somewhat contradictory: \"Only change what the signature change requires.\" Yet the call site changed also changes the need for imports. But maybe the imports are already present in the file but we don\\'t know. However, we can check: The previous new_code_snippet used `pydantic.TypeAdapter`. The failure was that pydantic is not defined. That suggests that there is no import of pydantic. So we need to add import for pydantic. But which import? It could be \"import pydantic\" at the top, or \"from pydantic import TypeAdapter\". The import of `parse_obj_as` originally may have been present. So we need to modify that import to import TypeAdapter instead. But the tool expects a replacement for the call site, not for the import statement. But we could include the import as part of the change because it\\'s needed.\\n\\nGiven that the migration note is about replacing parse_obj_as with TypeAdapter(Type).validate_python. So the fix is to change parse_obj_as to TypeAdapter. So the code becomes:\\n\\n```python\\nfrom pydantic import TypeAdapter\\n\\nreturn TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut we don\\'t know if there is already a `from pydantic import parse_obj_as`. Could be the file originally has `from pydantic import parse_obj_as, List`. Actually, List is from typing. So we might need to adjust imports.\\n\\nWe can search for typical file structure. The test file mentions parse_int_list function. The failing test indicates a function parse_int_list is defined. That function uses pydantic. So let\\'s assume service.py contains something like:\\n\\n```python\\nfrom typing import List\\nfrom pydantic import parse_obj_as\\n\\ndef parse_int_list(data):\\n    return parse_obj_as(List[int], data)\\n```\\n\\nThus, we need to replace that with:\\n\\n```python\\nfrom typing import List\\nfrom pydantic import TypeAdapter\\n\\ndef parse_int_list(data):\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut maybe there are other imports, but we only need to change those.\\n\\nGiven that we are asked to propose the replacement for the call site, we should provide just the new line(s) that replace parse_obj_as call. However, we could also include the import change, as that is needed for the call to work. The tool expects us to call propose_edit with new_code and rationale. The new_code should be the corrected code snippet for the call site, maybe including necessary imports if they are part of the call site. The instructions say \"only change what the signature change requires.\" But I think we should change the call and also import needed symbol.\\n\\nThus, I think the appropriate new_code would be:\\n\\n```python\\nfrom pydantic import TypeAdapter\\n\\nreturn TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut we need to preserve surrounding code style. If the original file had a function definition and within it a return statement, we need to keep indentation. The original code snippet includes an indentation (likely 4 spaces). The user snippet shows:\\n\\n```python\\n    return parse_obj_as(List[int], data)\\n```\\n\\nSo indentation of 4 spaces. The new_code should preserve that indentation.\\n\\nThus final new_code should be:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut that import statement inside the function is unusual. More typical is to have import at top of file. However, we could consider the original file had import at top: `from pydantic import parse_obj_as`. So we need to change that import to import TypeAdapter instead, i.e.:\\n\\n```python\\nfrom pydantic import TypeAdapter\\n```\\n\\nand keep the function unchanged. But the call site remains:\\n\\n```python\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nThus we need to adjust two things: import and call. The tool\\'s propose_edit expects a \"new_code\" for the given call site. It might be applied to the exact location (the line with return). The import change might be separate. But perhaps they want to replace the whole function block. However, the instructions say \"You are given one Python call site that uses a deprecated/changed API symbol.\" So the call site is the return line. We should replace that line. But the import change is separate. However, the error is NameError for pydantic because it\\'s missing import. So they might want to also adjust import in the same commit. But the tool might have a separate place for import changes; but we cannot see that. The user likely expects us to propose a new code snippet for the call site that includes the necessary import. Maybe they will manually apply import later.\\n\\nAlternatively, we could import pydantic at the call site:\\n\\n```python\\n    import pydantic\\n\\n    return pydantic.TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut that still suffers from the same error if not imported earlier. But if we import pydantic inside function, then `pydantic` is defined. The previous attempt had `pydantic.TypeAdapter` but no import. So adding `import pydantic` before that line would fix NameError. However, the new code should preserve surrounding style. Typically imports are at top. But we could put import inside function, but it\\'s not typical. However, to keep changes minimal and only change call site, we could simply add import statement before the return line, within function.\\n\\nThus new_code could be:\\n\\n```python\\n    import pydantic\\n\\n    return pydantic.TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut we could also use `from pydantic import TypeAdapter` before the return. But then we don\\'t need `pydantic` prefix. That may be more idiomatic. So we could do:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nBut note that we also need List to be imported. It likely is already imported from typing. The original snippet includes `List[int]`, so we assume List is imported. So adding `from pydantic import TypeAdapter` is fine.\\n\\nThus final answer: propose_edit with new_code that includes import and return line.\\n\\nNow we need to think about the function name parse_int_list. Actually the test shows parse_int_list. But the code snippet we have is generic: return parse_obj_as(List[int], data). It might be inside parse_int_list function. So the new_code should preserve indentation. So we need to propose:\\n\\n```python\\n    from pydantic import TypeAdapter\\n\\n    return TypeAdapter(List[int]).validate_python(data)\\n```\\n\\nMake sure to preserve indentation: likely 4 spaces for return line; the import line should also be at same indentation? Usually imports are at module level, not inside function. But given they want to preserve surrounding style, we might not want to introduce import inside function. So perhaps we should not include import. Instead, we should change the call site only, assuming the import will be fixed elsewhere. But error indicates missing import. Could be they used `from pydantic import parse_obj_as` originally. So we need to change that import to import TypeAdapter instead. But that change is not at the call site, it\\'s at import statement. However, they might have not imported parse_obj_as from pydantic, but used `pydantic.parse_obj_as` originally. Actually, we need to infer the original file. The test snippet shows:\\n\\n```\\nservice.py:5: \\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _', 'format': 'unknown', 'index': 0}]})"
+      }
+    ]
+  },
+  {
+    "case": "08",
+    "library": "SQLAlchemy",
+    "change": "ext.declarative.declarative_base -> orm.declarative_base",
+    "api_name": "realworld-case08-2d4113",
+    "expected_scanner_result": "MATCH",
+    "run_id": "dd636f68-0247-47a5-9d59-cc9fee5c5cec",
+    "elapsed_seconds": 60.3,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "validated",
+        "confidence_score": 1.0,
+        "test_pass_count": 1,
+        "test_fail_count": 1,
+        "retry_count": 1,
+        "failure_reason": null
+      }
+    ]
+  },
+  {
+    "case": "09",
+    "library": "Flask / MarkupSafe",
+    "change": "flask.Markup removed -> markupsafe.Markup",
+    "api_name": "realworld-case09-e82f6d",
+    "expected_scanner_result": "MATCH",
+    "run_id": "62d8a821-47e6-45db-82a2-7071c08d0927",
+    "elapsed_seconds": 208.0,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "needs_review",
+        "confidence_score": 0.95,
+        "test_pass_count": 0,
+        "test_fail_count": 3,
+        "retry_count": 3,
+        "failure_reason": "pytest reported 0 failure(s) but no per-test detail was found in the report (pass_count=0)"
+      }
+    ]
+  },
+  {
+    "case": "10",
+    "library": "urllib3",
+    "change": "contrib.pyopenssl.inject_into_urllib3 removed",
+    "api_name": "realworld-case10-4846f5",
+    "expected_scanner_result": "MATCH",
+    "run_id": "c6f3fe0a-7bca-46e4-8ab9-73e72e35d034",
+    "elapsed_seconds": 51.2,
+    "outcome": "completed",
+    "file_tasks": [
+      {
+        "file_path": "service.py",
+        "status": "needs_review",
+        "confidence_score": 0.95,
+        "test_pass_count": 0,
+        "test_fail_count": 3,
+        "retry_count": 3,
+        "failure_reason": "pytest reported 0 failure(s) but no per-test detail was found in the report (pass_count=0)"
+      }
+    ]
+  }
+]

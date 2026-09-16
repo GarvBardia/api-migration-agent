@@ -1,0 +1,161 @@
+# ------------------------------------------------------------------
+# Autonomous API Migration Agent — local dev infrastructure
+#
+# Services:
+#   postgres        -> application state (runs, file_tasks, review queue,
+#                      changelog events) + pgvector extension for RAG chunks
+#   redis           -> Celery broker/result backend + semantic migration cache
+#   backend         -> FastAPI app (REST + SSE endpoints only -- does not
+#                      run agent tasks itself, see app/tasks.py)
+#   celery-worker   -> runs the actual agent pipeline (scan/migrate/validate)
+#                      as Celery tasks; the only service that touches the
+#                      Docker socket, since it's the one running the
+#                      Validation Agent's sandboxed test containers
+#   celery-beat     -> Celery Beat scheduler (Step 6b's periodic resume sweep)
+#
+# Added 2026-08-27, containerization session: backend/celery-worker/
+# celery-beat all now actually build from backend/Dockerfile (previously a
+# gap since Step 1 -- backend ran on the host via the venv, see CLAUDE.md's
+# dated note in this same session for what had to change to make this work,
+# in particular a real Docker-in-Docker sibling-mount path problem in
+# app/agents/validation.py, not just the two prior Windows-Docker bugs.
+# ------------------------------------------------------------------
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: migration-agent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-migration_agent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-migration_agent}
+      POSTGRES_DB: ${POSTGRES_DB:-migration_agent}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-migration_agent}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: migration-agent-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: migration-agent-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-migration_agent}:${POSTGRES_PASSWORD:-migration_agent}@postgres:5432/${POSTGRES_DB:-migration_agent}
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+    # No Docker socket mount here (removed this session): the FastAPI
+    # process never calls the Validation Agent directly (app/api/main.py
+    # only dispatches Celery tasks) -- only celery-worker actually shells
+    # out to `docker`, so only it gets the socket, least-privilege.
+    command: ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: migration-agent-celery-worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-migration_agent}:${POSTGRES_PASSWORD:-migration_agent}@postgres:5432/${POSTGRES_DB:-migration_agent}
+      REDIS_URL: redis://redis:6379/0
+      # Fixed container-side half of the Docker-in-Docker path-translation
+      # fix in app/agents/validation.py (see its module-level note and
+      # CLAUDE.md's dated entry) -- always /sandbox_tmp for this service,
+      # not machine-specific, so it's set here rather than in .env.
+      SANDBOX_CONTAINER_TMP_DIR: /sandbox_tmp
+      # SANDBOX_HOST_TMP_DIR (the machine-specific host-side half) comes
+      # from .env via env_file above -- must be the absolute HOST path to
+      # ./backend/.sandbox_tmp, since the host Docker daemon (reached via
+      # the socket mount below) resolves `docker run -v` sources against
+      # its own filesystem, not this container's.
+    volumes:
+      - ./backend:/app
+      # Docker-in-Docker socket: this is the one service that actually
+      # runs `docker run` (Validation Agent sandbox containers), talking
+      # to the HOST's daemon as a sibling, not a nested daemon of its own.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Shared directory for Validation Agent temp repo copies -- must be
+      # bind-mounted from the HOST (not a named volume) so the same bytes
+      # are reachable from both this container (by this path) and the
+      # sandbox containers the host daemon spins up (by the translated
+      # SANDBOX_HOST_TMP_DIR path) -- see validation.py's _host_visible_path.
+      - ./backend/.sandbox_tmp:/sandbox_tmp
+    command:
+      [
+        "python",
+        "-m",
+        "celery",
+        "-A",
+        "app.celery_app",
+        "worker",
+        "--loglevel=info",
+        "--pool=threads",
+        "--concurrency=4",
+      ]
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: migration-agent-celery-beat
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-migration_agent}:${POSTGRES_PASSWORD:-migration_agent}@postgres:5432/${POSTGRES_DB:-migration_agent}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    # No Docker socket mount -- Celery Beat only schedules
+    # periodic_resume_sweep (a DB-only task), never touches Docker.
+    command:
+      ["python", "-m", "celery", "-A", "app.celery_app", "beat", "--loglevel=info"]
+
+volumes:
+  postgres_data:
+  redis_data:
