@@ -64,11 +64,23 @@ app = FastAPI(title="Autonomous API Migration Agent")
 
 # Step 8a (added 2026-08-27): the Next.js dev server runs on a different
 # origin (localhost:3000 vs. this API's localhost:8000) -- browsers block
-# cross-origin fetch/EventSource without this. Scoped to localhost dev
-# ports only; tighten before any real deployment.
+# cross-origin fetch/EventSource without this.
+#
+# Added 2026-09-20 (public-demo deployment, see PROJECT_STATUS.md): the
+# static frontend is served from GitHub Pages
+# (https://garvbardia.github.io) and calls this API through a Cloudflare
+# Tunnel -- a genuinely different origin again. A browser's Origin header
+# for a Pages site is just scheme+host (no path), so the bare
+# `https://garvbardia.github.io` is the right value even though the site
+# itself lives under /api-migration-agent/. Local dev origins are kept:
+# this ADDS the deployed origin, it doesn't replace local access.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://garvbardia.github.io",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

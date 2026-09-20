@@ -15,6 +15,10 @@ __pycache__/
 .pytest_cache/
 backend/.pytest_cache/
 
+# Celery Beat's local scheduler state file (binary, machine-local runtime
+# state, regenerated automatically -- not source).
+backend/celerybeat-schedule
+
 # Validation Agent's shared temp dir (app/agents/validation.py) -- always
 # emptied by shutil.rmtree after each sandboxed run; keep the directory
 # itself (via .gitkeep) but never its transient contents.

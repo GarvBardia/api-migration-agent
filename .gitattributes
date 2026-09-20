@@ -1,0 +1,2 @@
+# Shell scripts must stay LF -- CRLF makes bash fail with ": command not found".
+*.sh text eol=lf

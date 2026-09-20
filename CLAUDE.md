@@ -1229,6 +1229,71 @@ the correctness contract" above); no UI surface for the sweep's own
 activity (no "last sweep ran at X" indicator beyond each repo's own
 `last_auto_checked_at`, already shown in the `/repos` table).
 
+## 4c. Public demo deployment (2026-09-20)
+
+Frontend is a static export on GitHub Pages
+(`https://garvbardia.github.io/api-migration-agent/`, `gh-pages` branch),
+calling this machine's backend through a Cloudflare *quick* tunnel. Restart
+procedure and honest limits are in PROJECT_STATUS.md ("Public demo"); this
+section records what a future session would otherwise re-derive.
+
+- **Dynamic route can't be statically exported — verified by a real build,
+  not assumed.** `output: "export"` failed with `Page "/runs/[id]" is
+  missing "generateStaticParams()"` (run ids are runtime data). Run detail
+  moved to `app/run/page.tsx` reading `?id=` via `useSearchParams()` inside a
+  `<Suspense>` (required for export). Links in `RunList.tsx`/
+  `RunStartForm.tsx` and `Nav.tsx`'s active-state check updated. Backend
+  API paths (`/runs/{id}`) are unchanged.
+- `next.config.mjs`: `output: "export"` is unconditional (so `next dev`
+  catches export-incompatible changes locally), `trailingSlash: true`,
+  `basePath` from `NEXT_PUBLIC_BASE_PATH` (Pages project sites live under
+  `/<repo>/`; without it every `/_next/` asset 404s). The API URL is
+  `NEXT_PUBLIC_API_BASE_URL`, inlined at build time (already how
+  `lib/api.ts` worked); a real env var on the command line beats
+  `.env.local`.
+- **Git Bash mangles leading-slash env values**: `NEXT_PUBLIC_BASE_PATH=
+  /api-migration-agent` becomes `C:/Program Files/Git/api-migration-agent`
+  and the build aborts. Needs `MSYS_NO_PATHCONV=1` (baked into
+  `deploy/deploy_pages.sh`).
+- **`.nojekyll` is mandatory** in the published branch — Jekyll drops
+  underscore-prefixed dirs, i.e. all of `/_next/`.
+- **`gh-pages` branch, not Actions**: pushing a workflow file needs the
+  `workflow` OAuth scope (the gh token has `repo` only) → another
+  interactive login. `deploy/deploy_pages.sh <tunnel-url>` builds locally and
+  force-pushes `out/` to `gh-pages` (a build-artifact branch, so force-push
+  is normal).
+- **Why the founder saw GitHub's 404 first:** Pages had never been enabled;
+  `gh api repos/.../pages` returned 404. GitHub auto-created the Pages site
+  when the `gh-pages` branch was first pushed (verified afterwards: source
+  `gh-pages` `/`, `https_enforced`, build `built`).
+- CORS (`backend/app/api/main.py`): added the bare origin
+  `https://garvbardia.github.io` (an Origin header has no path) alongside
+  the localhost entries. Verified with real preflights — allowed origin
+  echoed, foreign origin rejected — locally and through the tunnel; backend
+  container restarted to be sure it loaded the change.
+- **Quick tunnel URL changes on every cloudflared restart**, and the URL is
+  baked into the static build → restart means re-running the deploy script.
+  A process started from inside `frontend/out` inherits that cwd and makes
+  `rm -rf out` fail with EBUSY (happened; start long-running processes from
+  the project root). New `*.trycloudflare.com` names can take minutes to
+  resolve on this machine's resolver though 1.1.1.1 has them immediately —
+  verify with `curl --resolve` before concluding the tunnel is broken.
+- **Security posture — unauthenticated, publicly reachable API.** Anyone with
+  the tunnel URL (it's in the public JS bundle) can `POST /runs` with an
+  arbitrary `repo_url` (a filesystem path inside the celery-worker
+  container; the scanner reads `.py` files there and sends matched snippets
+  to the LLM provider), start work that spends free-tier LLM quota and runs
+  sandbox containers on this machine, and approve/reject/delete via the other
+  endpoints. No file upload path exists, so it can't inject code to run, and
+  the root `.env` isn't inside the container's `/app` mount — but this is a
+  demo-grade exposure, not a hardened one. Auth is the obvious next step
+  before anything beyond a trusted-audience demo.
+- Verified end to end from the live Pages URL in a real browser: page loads,
+  cross-origin `/repos` and `/runs` calls to the tunnel return 200, and a run
+  started from the public form completed through the real Docker sandbox
+  with the fixture's documented outcome (`service_a.py` validated 1.00 1/0,
+  `service_b.py` needs_review 0.75 1/1).
+
 ## 5. Build order and status
 
 **Updated 2026-08-26:** Docker Desktop is now installed and running. `0002`

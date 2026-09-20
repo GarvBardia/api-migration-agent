@@ -58,7 +58,7 @@ export default function RunStartForm() {
         version_from: versionFrom,
         version_to: versionTo,
       });
-      router.push(`/runs/${run_id}`);
+      router.push(`/run?id=${run_id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to start run.");
       setSubmitting(false);

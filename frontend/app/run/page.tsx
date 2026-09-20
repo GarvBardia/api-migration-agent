@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+// Moved from app/runs/[id]/page.tsx to app/run/page.tsx (reads `?id=`)
+// on 2026-09-20 for the GitHub Pages static export: `output: "export"`
+// requires every dynamic route to be enumerable at build time via
+// generateStaticParams(), and run ids are runtime data (UUIDs created by
+// users), so a `[id]` segment cannot be pre-rendered. Confirmed by a real
+// build failing with exactly that error, not assumed. Everything below the
+// id lookup is unchanged.
+
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   getRun,
   getFileTasks,
@@ -16,14 +25,26 @@ import FileTasksTable from "@/components/FileTasksTable";
 
 const TERMINAL_STATUSES = new Set(["completed", "failed"]);
 
-export default function RunDetailPage({ params }: { params: { id: string } }) {
-  const runId = params.id;
+// `useSearchParams()` must sit under a <Suspense> boundary for a static
+// export (Next bails out of prerendering the page otherwise) -- hence this
+// thin default-export wrapper around the real component below.
+export default function RunDetailPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-foreground-muted">Loading…</p>}>
+      <RunDetail />
+    </Suspense>
+  );
+}
+
+function RunDetail() {
+  const runId = useSearchParams().get("id") ?? "";
   const [run, setRun] = useState<MigrationRun | null>(null);
   const [tasks, setTasks] = useState<FileTask[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState(false);
 
   const refresh = useCallback(async () => {
+    if (!runId) return; // no ?id= in the URL -- nothing to fetch
     try {
       const [runData, taskData] = await Promise.all([
         getRun(runId),
@@ -49,6 +70,7 @@ export default function RunDetailPage({ params }: { params: { id: string } }) {
   // hit the REST endpoints for the full row data (the SSE snapshot only
   // carries status per file_task, not confidence/test counts/etc.).
   useEffect(() => {
+    if (!runId) return;
     const source = new EventSource(runEventsUrl(runId));
     setLive(true);
 
@@ -74,6 +96,17 @@ export default function RunDetailPage({ params }: { params: { id: string } }) {
     };
   }, [runId]);
 
+  if (!runId) {
+    return (
+      <p className="text-sm text-foreground-muted">
+        No run selected — pick one from the{" "}
+        <Link href="/" className="underline">
+          runs list
+        </Link>
+        .
+      </p>
+    );
+  }
   if (error) {
     return (
       <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">

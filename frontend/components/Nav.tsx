@@ -10,7 +10,8 @@ const LINKS = [
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/" || pathname.startsWith("/runs");
+  // "/run" (the run-detail page, `/run?id=...`) counts as part of "Runs".
+  if (href === "/") return pathname === "/" || pathname.startsWith("/run");
   return pathname.startsWith(href);
 }
 

@@ -68,7 +68,7 @@ export default function RunList() {
             >
               <td className="px-4 py-3">
                 <Link
-                  href={`/runs/${run.id}`}
+                  href={`/run?id=${run.id}`}
                   className="font-medium text-foreground transition-colors hover:text-accent hover:underline"
                 >
                   {run.api_name}
