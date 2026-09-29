@@ -147,7 +147,7 @@ function RepoTable({
   }
 
   if (repos.length === 0) {
-    return <EmptyPanel>No saved repos yet — add one above.</EmptyPanel>;
+    return <EmptyPanel>No saved repos yet. Add one above.</EmptyPanel>;
   }
 
   return (
@@ -179,9 +179,11 @@ function RepoTable({
                 {repo.default_api_name}
               </td>
               <td className="px-4 py-3 text-foreground-muted">
-                {repo.auto_check_enabled
-                  ? `every ${repo.check_interval_hours ?? "—"}h`
-                  : "off"}
+                {!repo.auto_check_enabled
+                  ? "off"
+                  : repo.check_interval_hours
+                    ? `every ${repo.check_interval_hours}h`
+                    : "on, no interval set"}
               </td>
               <td className="px-4 py-3 text-foreground-muted">
                 {repo.last_auto_checked_at

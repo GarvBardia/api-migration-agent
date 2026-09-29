@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// "/" is the Confide landing page (reached via the brand link); the tool's
+// own pages are these. Since 2026-09-23 "Runs" lives at /app, not "/".
 const LINKS = [
-  { href: "/", label: "Runs" },
+  { href: "/app", label: "Runs" },
   { href: "/review", label: "Review queue" },
   { href: "/repos", label: "Saved repos" },
 ];
 
 function isActive(pathname: string, href: string) {
   // "/run" (the run-detail page, `/run?id=...`) counts as part of "Runs".
-  if (href === "/") return pathname === "/" || pathname.startsWith("/run");
+  if (href === "/app") return pathname.startsWith("/app") || pathname.startsWith("/run");
   return pathname.startsWith(href);
 }
 
@@ -26,9 +28,9 @@ export default function Nav() {
           className="mr-4 flex items-center gap-2 text-[15px] font-semibold tracking-tight text-foreground"
         >
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent text-[11px] font-bold text-accent-foreground">
-            M
+            C
           </span>
-          Migration Agent
+          Confide
         </Link>
         {LINKS.map((link) => {
           const active = isActive(pathname ?? "", link.href);

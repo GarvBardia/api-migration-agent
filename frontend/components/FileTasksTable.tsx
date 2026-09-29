@@ -5,7 +5,7 @@ export default function FileTasksTable({ tasks }: { tasks: FileTask[] }) {
   if (tasks.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border-strong bg-surface-muted/40 px-4 py-8 text-center text-sm text-foreground-muted">
-        No file tasks yet — scan may still be running.
+        No file tasks yet. The scan may still be running.
       </div>
     );
   }
@@ -43,7 +43,7 @@ export default function FileTasksTable({ tasks }: { tasks: FileTask[] }) {
                 <StatusBadge status={t.status} />
               </td>
               <td className="px-4 py-3 tabular-nums">
-                {t.confidence_score !== null ? t.confidence_score.toFixed(2) : "—"}
+                {t.confidence_score !== null ? t.confidence_score.toFixed(2) : "n/a"}
               </td>
               <td className="px-4 py-3 tabular-nums">
                 <span className="text-emerald-600">{t.test_pass_count}</span>

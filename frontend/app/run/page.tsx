@@ -99,8 +99,8 @@ function RunDetail() {
   if (!runId) {
     return (
       <p className="text-sm text-foreground-muted">
-        No run selected — pick one from the{" "}
-        <Link href="/" className="underline">
+        No run selected. Pick one from the{" "}
+        <Link href="/app" className="underline">
           runs list
         </Link>
         .
@@ -122,7 +122,7 @@ function RunDetail() {
     <div className="flex flex-col gap-8">
       <div>
         <Link
-          href="/"
+          href="/app"
           className="mb-3 inline-flex items-center gap-1 text-sm text-foreground-muted transition-colors hover:text-foreground"
         >
           ← All runs

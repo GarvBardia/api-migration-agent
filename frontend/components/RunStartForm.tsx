@@ -84,7 +84,7 @@ export default function RunStartForm() {
             <option value={MANUAL_ENTRY_VALUE}>Type manually…</option>
             {repos.map((repo) => (
               <option key={repo.id} value={repo.id}>
-                {repo.name} — {repo.default_api_name}
+                {repo.name} ({repo.default_api_name})
               </option>
             ))}
           </select>

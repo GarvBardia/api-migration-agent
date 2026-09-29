@@ -14,9 +14,24 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+// Product display name is "Confide" (renamed 2026-09-23). Repo, package and
+// folder names stay "migration-agent" on purpose -- see CLAUDE.md §4d.
+const DESCRIPTION =
+  "Confide finds code broken by a library update, writes the fix, and tests it before you rely on it.";
+
 export const metadata: Metadata = {
-  title: "Migration Agent",
-  description: "Autonomous API Migration Agent -- run status and review queue",
+  title: "Confide",
+  description: DESCRIPTION,
+  openGraph: {
+    title: "Confide",
+    description: DESCRIPTION,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Confide",
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

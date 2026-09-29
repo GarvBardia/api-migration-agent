@@ -60,7 +60,8 @@ from .schemas import (
 TERMINAL_RUN_STATUSES = {"completed", "failed"}
 SSE_POLL_INTERVAL_SECONDS = 1.0
 
-app = FastAPI(title="Autonomous API Migration Agent")
+# Display name only (shown on /docs); renamed 2026-09-23, see CLAUDE.md §4d.
+app = FastAPI(title="Confide API")
 
 # Step 8a (added 2026-08-27): the Next.js dev server runs on a different
 # origin (localhost:3000 vs. this API's localhost:8000) -- browsers block

@@ -1,4 +1,4 @@
-# Project Status — Autonomous API Migration Agent
+# Project Status: Confide
 
 *(Plain-English summary. For technical details, see `CLAUDE.md` and `TASKS.md`.)*
 
@@ -128,6 +128,11 @@ pass/fail judgment for each: `backend/tests/REAL_WORLD_BATTERY_REPORT.md`.
 
 **Live at: https://garvbardia.github.io/api-migration-agent/**
 
+That address opens the Confide landing page, which explains what the tool
+does and how to use it. The tool itself is one click in, at
+https://garvbardia.github.io/api-migration-agent/app/. The landing page
+works even when this computer is off. The tool does not.
+
 Anyone with that link can open the website from any device (phone, other
 wifi, anywhere) and use it for real — start a migration, watch it run
 live, review fixes. It is a real, working public demo. It is **not** a
@@ -220,7 +225,8 @@ website (on your own computer, outside Docker).
    npm run dev
    ```
    Wait for it to print `Ready` — usually takes under 10 seconds.
-4. Open your browser to: **http://localhost:3000**
+4. Open your browser to: **http://localhost:3000**. That's the landing page.
+   The tool itself is at **http://localhost:3000/app**.
 
 That's it — the site talks to the backend automatically. To stop
 everything later, close the website's terminal window (or press
@@ -274,3 +280,13 @@ finished with the expected result. One change to how the site is built: the
 page for viewing a single run now lives at `run/?id=…` instead of
 `runs/<id>`, because a fully static website can't pre-build a page for
 every future run.
+
+**September 30, 2026:** The product is now called Confide. The name changed
+everywhere a person sees it: the website header, the browser tab, the page
+descriptions, and a new README on the GitHub page. The GitHub repository,
+code folders, and internal names were left as they were on purpose, so the
+public link keeps working and the project history stays intact. The website
+also has a new front page that explains in plain words what Confide does,
+how a run works step by step, how to use the tool, and what each status
+label means. The tool itself moved one click in, to `/app`. Nothing about how
+the tool works changed.

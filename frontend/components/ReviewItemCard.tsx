@@ -54,7 +54,7 @@ export default function ReviewItemCard({
         modified_code: code,
       });
       const message = result.revalidation_dispatched
-        ? `Re-validation dispatched for ${task.file_path} -- it will re-appear here if it fails again, or reach status='validated' once Step 5 re-confirms the fix.`
+        ? `Testing your version of ${task.file_path}. If it passes, it will be marked validated. If it fails, it will come back here.`
         : `Recorded "${decision}" for ${task.file_path}.`;
       onDecided(message);
     } catch (err) {
@@ -114,7 +114,7 @@ export default function ReviewItemCard({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <StatChip label="confidence" value={task.confidence_score?.toFixed(2) ?? "—"} />
+        <StatChip label="confidence" value={task.confidence_score?.toFixed(2) ?? "n/a"} />
         <StatChip
           label="tests"
           value={`${task.test_pass_count}/${task.test_fail_count}`}

@@ -44,7 +44,7 @@ export default function RunList() {
     return <EmptyPanel>Loading runs…</EmptyPanel>;
   }
   if (runs.length === 0) {
-    return <EmptyPanel>No runs yet — start one above.</EmptyPanel>;
+    return <EmptyPanel>No runs yet. Start one above.</EmptyPanel>;
   }
 
   return (

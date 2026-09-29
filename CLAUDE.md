@@ -1,4 +1,4 @@
-# CLAUDE.md — Autonomous API Migration Agent
+# CLAUDE.md: Confide (repo and code name: api-migration-agent)
 
 Read this file at the start of every session. It is the persistent memory for this
 repo. If something here conflicts with what you observe in the code, the code wins —
@@ -1293,6 +1293,56 @@ section records what a future session would otherwise re-derive.
   started from the public form completed through the real Docker sandbox
   with the fixture's documented outcome (`service_a.py` validated 1.00 1/0,
   `service_b.py` needs_review 0.75 1/1).
+
+## 4d. Rename to "Confide" + landing page (2026-09-23 to 09-30)
+
+**Display name only.** The product is "Confide" everywhere a person sees it:
+nav brand (logo mark "C"), `<title>`/description/OpenGraph/Twitter meta
+(`frontend/app/layout.tsx`), FastAPI `title` (visible on `/docs`), root
+`README.md` (new; the repo had none, so its GitHub page was blank),
+`PROJECT_STATUS.md`. **Deliberately NOT renamed:** the GitHub repo
+(`api-migration-agent`, which would break the Pages URL
+`garvbardia.github.io/api-migration-agent/`), folder/package names, git
+history. Also NOT renamed: "Migration Agent" as the name of the **Step 4
+pipeline component** (the LLM-calling agent) in code, docstrings and these
+docs. That is an architecture term, not the product name, and must stay
+(e.g. "the Migration Agent (Step 4)" still means `migration.py`). Also left
+alone: `github_pr.py`'s `git config user.name "Migration Agent"`. That
+only ever lives in a throwaway local repo used to compute a diff, never
+pushed, so it is not user-facing.
+
+**Routes.** `/` is now a static landing page (`frontend/app/page.tsx`,
+server component, zero API calls, so it renders even when the tunnel or
+backend is down). The tool moved from `/` to `/app` (`app/app/page.tsx`,
+`git mv`, content unchanged). Updated: nav "Runs" -> `/app` (active on
+`/app` and `/run`), brand link -> `/`, run-detail back link and
+"no run selected" link -> `/app`. `RunStartForm` still pushes to
+`/run?id=` after submit.
+
+**Copy rules for all user-facing text (user's explicit instruction):** no
+em or en dashes, no marketing vocabulary (unlock, seamless, leverage,
+robust, powerful, empower, and so on), short sentences, no exclamation
+points. Applied to the landing page, README, and every UI string touched:
+empty states, the saved-repo dropdown label ("name (api)"), `n/a` instead
+of a dash for empty confidence, "on, no interval set" instead of "every
+[dash]h", and the Review Queue "modified" toast (which exposed jargon like
+"Step 5" and `status='validated'` to end users). Code comments were left
+as they are (not copy). **Verification gotcha:** a grep bracket expression containing the literal em
+and en dash characters, in this
+Git Bash locale matches byte-wise, so it false-positives on `…`, `←`,
+`→` (all start with byte `E2`). Use `LC_ALL=C.UTF-8 grep -P
+"\x{2014}|\x{2013}"`. Older sections of PROJECT_STATUS.md still contain em
+dashes; only lines touched in this change were cleaned.
+
+**Landing copy must stay true.** Claims it makes, each checked against the
+code: at most three failed test attempts per fix
+(`DEFAULT_MAX_RETRIES=3`); the user's files are never edited (validation
+patches a temp copy); `needs_review` covers failed tests, an unusable fix,
+and low confidence despite passing; the repo path is a path on the
+machine running Confide; a run with zero rows can mean "no recorded
+changes for that library". It says "finds where your code uses", not
+"every place", because of the documented two-level-chain scanner gap
+(§4b). If behavior changes, update the landing page with it.
 
 ## 5. Build order and status
 
