@@ -1395,6 +1395,15 @@ founder confirms before `deploy/deploy_pages.sh` is re-run.
   after a crash) counts toward the cap until it is resolved.
 - Landing page Review Queue card now states Modify is off on the public demo.
 
+- **Deployed 2026-10-05** from main `ce080cf` (gh-pages `715591e`, Pages build
+  reported `built`). Verified in a real browser on the public page: example run
+  completed (service_a validated, service_b needs_review 0.75), `/etc` shows
+  "This server only accepts folders inside: /app/tests/fixtures" in the form,
+  all Modify buttons disabled and a direct Modify call returned 403, a 4th
+  simultaneous run returned 429. The quick tunnel was started with a 7000 s
+  hard timeout, so it ends about 2 hours after start; restart it and re-run
+  `deploy/deploy_pages.sh <url>` to bring the demo back.
+
 **Tests added.** `test_repo_paths.py` (inside root, `..` escape, symlink
 escape, nonexistent, file, unset leaves dev unchanged, API 422s, `scan_task`
 fails the run), `test_modify_gate.py`, `test_seed.py`. The symlink test skips

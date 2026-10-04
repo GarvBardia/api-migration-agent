@@ -328,3 +328,12 @@ demo is busy..."). It only applies to the public demo, not local use. If a run
 ever gets stuck in "running", it counts toward the limit until it is cleared.
 The landing page also now says Modify is switched off on the public demo.
 
+**October 5, 2026 (later):** The hardened demo is live at
+https://garvbardia.github.io/api-migration-agent/ and was checked from a real
+browser: the example run finishes, a folder outside the example is refused with
+a clear message, Modify is greyed out and refused by the server, and a 4th
+simultaneous run is told the demo is busy. The tunnel was started to run for
+about 2 hours. After that, restart it and re-run the deploy script (steps
+under "Restarting it"). The review list still holds a few "service_b.py" items
+from these checks. They are harmless demo data.
+
