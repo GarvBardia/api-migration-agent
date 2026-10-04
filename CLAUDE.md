@@ -1469,3 +1469,20 @@ Stop and ask the user before proceeding, rather than guessing, when:
 
 Do not silently reinterpret scope to make a step "complete." An honest partial
 result with a named gap is correct behavior, not a failure.
+
+## Working rules (added by Garv)
+- The owner is non-technical. Explain the root cause in plain English BEFORE any fix.
+- Be token-efficient: read only the files you need, don't re-read, keep replies short.
+- Never delete or move anything without explicit permission. Copy, don't move.
+- Never open or print .env files, keys or credentials.
+- Run the project's tests after every change and report the result.
+- Debug errors yourself: read the logs or traceback, don't ask me to paste them.
+- No git push, reset --hard, clean or force flags unless I ask.
+- At the end of each session, update "Where we left off" below and the task list.
+
+## Where we left off
+- Date:
+- Last thing done:
+- Tests: passing / failing (which)
+- Known problems:
+- Next step:

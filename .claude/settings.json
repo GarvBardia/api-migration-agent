@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)", "Read(**/.env.*)", "Read(**/.claude.json)", "Read(**/.credentials.json)",
+      "Bash(rm:*)", "Bash(del:*)", "Bash(rmdir:*)", "Bash(Remove-Item:*)",
+      "Bash(git push:*)", "Bash(git reset:*)", "Bash(git clean:*)"
+    ]
+  }
+}
