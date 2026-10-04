@@ -26,7 +26,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -41,6 +43,7 @@ from sqlalchemy.orm import Session
 # process either.
 load_dotenv(Path(__file__).resolve().parents[3] / ".env")
 
+from app.repo_paths import RepoPathError, validate_repo_path
 from db import get_db
 from db.models import FileTask, HumanReviewQueue, MigrationRun, Repo
 
@@ -61,7 +64,25 @@ TERMINAL_RUN_STATUSES = {"completed", "failed"}
 SSE_POLL_INTERVAL_SECONDS = 1.0
 
 # Display name only (shown on /docs); renamed 2026-09-23, see CLAUDE.md §4d.
-app = FastAPI(title="Confide API")
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    # Keep the permanent demo change record in place (see app/seed.py).
+    # A DB that is not up yet must not stop the API from starting.
+    try:
+        from app.seed import ensure_demo_event
+        from db import SessionLocal
+
+        session = SessionLocal()
+        try:
+            ensure_demo_event(session)
+        finally:
+            session.close()
+    except Exception:  # noqa: BLE001
+        pass
+    yield
+
+
+app = FastAPI(title="Confide API", lifespan=_lifespan)
 
 # Step 8a (added 2026-08-27): the Next.js dev server runs on a different
 # origin (localhost:3000 vs. this API's localhost:8000) -- browsers block
@@ -88,13 +109,61 @@ app.add_middleware(
 )
 
 
+def public_demo_mode() -> bool:
+    """True when PUBLIC_DEMO_MODE is set (docker-compose.yml only, never
+    .env). Read per call so tests can toggle it."""
+
+    return os.environ.get("PUBLIC_DEMO_MODE", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+MODIFY_BLOCKED_MESSAGE = (
+    "Modify is turned off on the public demo. Approve and reject still work."
+)
+
+
+@app.get("/config")
+def get_config() -> dict:
+    """Lets the UI know which features this server has turned off."""
+
+    return {"public_demo_mode": public_demo_mode()}
+
+
+MAX_ACTIVE_RUNS_DEMO = 3
+RUN_CAP_MESSAGE = (
+    "The public demo is busy. It runs at most 3 migrations at a time. "
+    "Wait for one to finish and try again."
+)
+
+
 @app.post("/runs", response_model=RunCreateResponse, status_code=201)
-def create_run(body: RunCreateRequest) -> RunCreateResponse:
+def create_run(
+    body: RunCreateRequest, db: Session = Depends(get_db)
+) -> RunCreateResponse:
     """Kicks off Step 6a's `start_migration_run` (scan -> dispatch ->
     group/chord), which runs asynchronously via Celery. Returns immediately
     with the new run's id -- doesn't wait for scanning to finish."""
 
     from app.tasks import start_migration_run
+
+    try:
+        validate_repo_path(body.repo_url)
+    except RepoPathError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    # Run cap (2026-10-05): public demo only, so local dev is unaffected.
+    if public_demo_mode():
+        active = (
+            db.query(MigrationRun)
+            .filter(MigrationRun.status.in_(["pending", "running"]))
+            .count()
+        )
+        if active >= MAX_ACTIVE_RUNS_DEMO:
+            raise HTTPException(status_code=429, detail=RUN_CAP_MESSAGE)
 
     run_id = start_migration_run(
         body.repo_url, body.api_name, body.version_from, body.version_to
@@ -147,6 +216,10 @@ def list_file_tasks(
 
 @app.post("/repos", response_model=RepoRead, status_code=201)
 def create_repo(body: RepoCreateRequest, db: Session = Depends(get_db)) -> RepoRead:
+    try:
+        validate_repo_path(body.repo_path)
+    except RepoPathError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     repo = Repo(
         name=body.name,
         repo_path=body.repo_path,
@@ -240,6 +313,9 @@ def post_review_decision(
     file_task = db.get(FileTask, review.file_task_id)
     if file_task is None:
         raise HTTPException(status_code=500, detail="Linked file_tasks row missing")
+
+    if body.decision == "modified" and public_demo_mode():
+        raise HTTPException(status_code=403, detail=MODIFY_BLOCKED_MESSAGE)
 
     if body.decision == "modified" and not body.modified_code:
         raise HTTPException(

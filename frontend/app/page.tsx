@@ -168,6 +168,7 @@ export default function LandingPage() {
               "Approve it if the fix is correct.",
               "Reject it if the fix is wrong.",
               "Modify it to write the fix yourself. Confide runs your version through the same tests before accepting it.",
+              "Modify is switched off on the public demo. Approve and Reject still work.",
             ]}
           />
           <div className={card}>
@@ -188,6 +189,47 @@ export default function LandingPage() {
             </dl>
           </div>
         </div>
+      </section>
+
+      {/* 3b. Worked example for the public demo (added 2026-10-04) */}
+      <section id="example" className={card}>
+        <p className={eyebrow}>Example</p>
+        <h2 className="mb-2 text-2xl font-semibold tracking-tight">
+          Try it with this example
+        </h2>
+        <p className="mb-4 text-sm text-foreground-muted">
+          Open the app and type these four values exactly, then press Start migration run.
+        </p>
+        <dl className="grid gap-3 text-sm sm:grid-cols-[10rem_1fr]">
+          <dt className="text-foreground-muted">Target repo path</dt>
+          <dd>
+            <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">
+              /app/tests/fixtures/step6_sample_repo
+            </code>
+          </dd>
+          <dt className="text-foreground-muted">API name</dt>
+          <dd>
+            <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">
+              oldapi
+            </code>
+          </dd>
+          <dt className="text-foreground-muted">Version from</dt>
+          <dd>
+            <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">
+              1.x
+            </code>
+          </dd>
+          <dt className="text-foreground-muted">Version to</dt>
+          <dd>
+            <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">
+              2.0
+            </code>
+          </dd>
+        </dl>
+        <p className="mt-4 text-sm text-foreground-muted">
+          The public demo only accepts the example folder, and Modify is turned
+          off. Approve and reject still work.
+        </p>
       </section>
 
       {/* 4. Into the tool */}

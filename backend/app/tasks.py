@@ -105,7 +105,11 @@ def scan_task(self, run_id: str) -> list[str]:
         if run is None:
             raise ValueError(f"migration_runs row {run_id} not found")
 
-        repo_root = Path(run.repo_url)
+        from app.repo_paths import validate_repo_path
+
+        # Raises RepoPathError (-> run marked failed below) for a missing,
+        # non-directory, or out-of-root path. Never "completed" with 0 results.
+        repo_root = validate_repo_path(run.repo_url)
         changelog_events = (
             session.query(ChangelogEvent)
             .filter_by(

@@ -178,6 +178,10 @@ def run_pytest_in_sandbox(
         "none",
         f"--memory={memory}",
         f"--cpus={cpus}",
+        # Added 2026-10-04 (public-demo hardening): cheap isolation flags.
+        "--pids-limit=256",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
         "-v",
         f"{_host_visible_path(repo_dir)}:/repo",
         "-w",

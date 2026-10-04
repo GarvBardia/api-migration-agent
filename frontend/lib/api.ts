@@ -91,11 +91,18 @@ export class ApiError extends Error {
   detail: unknown;
 
   constructor(status: number, detail: unknown) {
-    super(
-      `API request failed (${status}): ${
-        typeof detail === "string" ? detail : JSON.stringify(detail)
-      }`
-    );
+    // FastAPI sends {"detail": "<plain message>"} for HTTPException. Show
+    // just the message when it is a string, so users see the reason and
+    // not raw JSON.
+    const plain =
+      typeof detail === "string"
+        ? detail
+        : detail &&
+          typeof detail === "object" &&
+          typeof (detail as { detail?: unknown }).detail === "string"
+        ? ((detail as { detail: string }).detail)
+        : null;
+    super(plain ?? `API request failed (${status}): ${JSON.stringify(detail)}`);
     this.status = status;
     this.detail = detail;
   }
@@ -131,6 +138,14 @@ export function createRun(
   body: RunCreateRequest
 ): Promise<{ run_id: string }> {
   return request("/runs", { method: "POST", body: JSON.stringify(body) });
+}
+
+export interface ServerConfig {
+  public_demo_mode: boolean;
+}
+
+export function getConfig(): Promise<ServerConfig> {
+  return request("/config");
 }
 
 export function listRuns(): Promise<MigrationRun[]> {

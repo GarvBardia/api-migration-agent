@@ -290,3 +290,41 @@ also has a new front page that explains in plain words what Confide does,
 how a run works step by step, how to use the tool, and what each status
 label means. The tool itself moved one click in, to `/app`. Nothing about how
 the tool works changed.
+
+**October 4, 2026:** Locked down the public demo before sharing it wider.
+Nothing is deployed yet. The live site is unchanged until you confirm.
+
+- **The demo only reads the example folder.** Anyone who types any other
+  folder (or a folder that does not exist, or a file) gets a plain message
+  and no run starts. A folder that does not exist can no longer show up as a
+  finished run with nothing in it.
+- **Modify is switched off on the public demo.** The button is greyed out
+  with a one-line explanation, and the server refuses the request too.
+  Approve and reject still work.
+- **Checked what happens when you Modify a low-confidence fix.** A corrected
+  fix that passes its tests but started below the 0.80 confidence line ends up
+  in the review list again, not marked validated. This was tested against the
+  real sandbox, not just read from the code. The message shown after you press
+  Modify now says exactly that.
+- **The test sandbox is a little tighter.** It already had no internet and
+  memory and CPU limits. It now also limits the number of processes, drops
+  extra system permissions, and blocks privilege escalation. Not done yet: a
+  read-only filesystem and a non-root user (both need more testing).
+- **The example is permanent.** The example change record (`oldapi` 1.x to
+  2.0) is recreated automatically every time the backend starts, so cleaning
+  the database cannot break the demo.
+- **The landing page has a "Try it with this example" block** with the exact
+  folder, library name and versions to type.
+- **Side effect to know about:** these limits are set in the Docker setup, so
+  the Docker version you run locally also only accepts the example folder and
+  has Modify off. Running the backend outside Docker is unrestricted.
+- The full automated test suite passes (144 checks, 1 skipped on Windows; the
+  skipped one also passes inside Docker). The first full run had one timeout
+  in a pipeline test that passed alone and on a second full run.
+
+**October 5, 2026:** Added a limit to the public demo: if 3 migrations are
+already waiting or running, a 4th is refused with a plain message ("The public
+demo is busy..."). It only applies to the public demo, not local use. If a run
+ever gets stuck in "running", it counts toward the limit until it is cleared.
+The landing page also now says Modify is switched off on the public demo.
+

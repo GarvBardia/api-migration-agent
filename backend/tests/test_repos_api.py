@@ -39,14 +39,14 @@ def _cleanup(repo_id) -> None:
 
 
 class TestCreateAndListRepos:
-    def test_create_then_list_includes_it(self):
+    def test_create_then_list_includes_it(self, tmp_path):
         repo_id = None
         try:
             resp = client.post(
                 "/repos",
                 json={
                     "name": "repos-api-test-create",
-                    "repo_path": "/tmp/some/repo",
+                    "repo_path": str(tmp_path),
                     "default_api_name": "repos-api-test-oldapi",
                 },
             )
@@ -54,7 +54,7 @@ class TestCreateAndListRepos:
             body = resp.json()
             repo_id = body["id"]
             assert body["name"] == "repos-api-test-create"
-            assert body["repo_path"] == "/tmp/some/repo"
+            assert body["repo_path"] == str(tmp_path)
             assert body["default_api_name"] == "repos-api-test-oldapi"
             # Defaults, not asked for explicitly on this request.
             assert body["auto_check_enabled"] is False
@@ -68,14 +68,14 @@ class TestCreateAndListRepos:
         finally:
             _cleanup(repo_id)
 
-    def test_create_with_auto_check_fields(self):
+    def test_create_with_auto_check_fields(self, tmp_path):
         repo_id = None
         try:
             resp = client.post(
                 "/repos",
                 json={
                     "name": "repos-api-test-autocheck",
-                    "repo_path": "/tmp/some/other/repo",
+                    "repo_path": str(tmp_path),
                     "default_api_name": "repos-api-test-otherapi",
                     "auto_check_enabled": True,
                     "check_interval_hours": 12,
@@ -91,12 +91,12 @@ class TestCreateAndListRepos:
 
 
 class TestDeleteRepo:
-    def test_delete_removes_it_from_list(self):
+    def test_delete_removes_it_from_list(self, tmp_path):
         resp = client.post(
             "/repos",
             json={
                 "name": "repos-api-test-delete",
-                "repo_path": "/tmp/delete/me",
+                "repo_path": str(tmp_path),
                 "default_api_name": "repos-api-test-deleteapi",
             },
         )

@@ -72,6 +72,10 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-migration_agent}:${POSTGRES_PASSWORD:-migration_agent}@postgres:5432/${POSTGRES_DB:-migration_agent}
       REDIS_URL: redis://redis:6379/0
+      # Public-demo hardening (2026-10-04). Compose-only on purpose: never put
+      # these in .env, host-run processes load .env too.
+      ALLOWED_REPO_ROOTS: /app/tests/fixtures
+      PUBLIC_DEMO_MODE: "1"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -98,6 +102,9 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-migration_agent}:${POSTGRES_PASSWORD:-migration_agent}@postgres:5432/${POSTGRES_DB:-migration_agent}
       REDIS_URL: redis://redis:6379/0
+      # Public-demo hardening (2026-10-04). Compose-only on purpose: never put
+      # these in .env, host-run processes load .env too.
+      ALLOWED_REPO_ROOTS: /app/tests/fixtures
       # Fixed container-side half of the Docker-in-Docker path-translation
       # fix in app/agents/validation.py (see its module-level note and
       # CLAUDE.md's dated entry) -- always /sandbox_tmp for this service,

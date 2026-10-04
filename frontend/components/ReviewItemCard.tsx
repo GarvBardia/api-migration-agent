@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { HumanReviewQueueItem, postReviewDecision, ApiError } from "@/lib/api";
+import { useEffect, useState } from "react";
+import {
+  HumanReviewQueueItem,
+  postReviewDecision,
+  getConfig,
+  ApiError,
+} from "@/lib/api";
 import StatusBadge from "./StatusBadge";
 
 const ACCENT_BORDER: Record<string, string> = {
@@ -41,6 +46,13 @@ export default function ReviewItemCard({
   const [modifiedCode, setModifiedCode] = useState(task.new_code_snippet ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
+
+  useEffect(() => {
+    getConfig()
+      .then((c) => setDemoMode(c.public_demo_mode))
+      .catch(() => setDemoMode(false));
+  }, []);
 
   async function decide(
     decision: "approved" | "rejected" | "modified",
@@ -54,7 +66,7 @@ export default function ReviewItemCard({
         modified_code: code,
       });
       const message = result.revalidation_dispatched
-        ? `Testing your version of ${task.file_path}. If it passes, it will be marked validated. If it fails, it will come back here.`
+        ? `Retesting your version of ${task.file_path}. It is marked validated only if it passes its tests and clears the confidence threshold. Otherwise it comes back here.`
         : `Recorded "${decision}" for ${task.file_path}.`;
       onDecided(message);
     } catch (err) {
@@ -165,12 +177,17 @@ export default function ReviewItemCard({
             Reject
           </button>
           <button
-            disabled={submitting}
+            disabled={submitting || demoMode}
             onClick={() => setModifying(true)}
             className="rounded-lg bg-surface-muted px-3 py-1.5 text-sm font-medium text-foreground transition-all hover:bg-border active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Modify
           </button>
+          {demoMode && (
+            <span className="self-center text-xs text-foreground-muted">
+              Modify is turned off on the public demo.
+            </span>
+          )}
         </div>
       )}
 

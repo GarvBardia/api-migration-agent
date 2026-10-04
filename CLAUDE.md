@@ -1344,6 +1344,67 @@ changes for that library". It says "finds where your code uses", not
 "every place", because of the documented two-level-chain scanner gap
 (§4b). If behavior changes, update the landing page with it.
 
+## 4e. Public-demo hardening (2026-10-04)
+
+Before the demo link goes anywhere wider. Nothing here is deployed yet; the
+founder confirms before `deploy/deploy_pages.sh` is re-run.
+
+**Decisions**
+
+- **Path confinement** (`backend/app/repo_paths.py`, `validate_repo_path`).
+  Applied in `POST /runs`, `POST /repos` (422) and `scan_task` (run marked
+  `failed`, never `completed`). Resolves `..` and symlinks before checking.
+  In every mode the path must exist and be a directory. If
+  `ALLOWED_REPO_ROOTS` (os.pathsep list) is set, the resolved path must be
+  inside one root. A token was rejected: a static public site cannot hold a
+  secret, and a saved-repo allowlist is bypassable while `POST /repos` is open.
+- **Env placement.** `ALLOWED_REPO_ROOTS=/app/tests/fixtures` (backend and
+  celery-worker) and `PUBLIC_DEMO_MODE=1` (backend) are set ONLY in
+  `docker-compose.yml`, not `.env`, because host-run processes also load
+  `.env`. Consequence: the Docker stack is the demo stack. Local Docker use
+  also accepts only the fixtures folder and has Modify off. Host-run dev
+  (uvicorn on the host) is unrestricted.
+- **Modify gate.** `PUBLIC_DEMO_MODE` makes the `modified` decision return 403
+  before any DB change. `GET /config` returns `{"public_demo_mode": bool}`;
+  `ReviewItemCard` disables Modify with a one-line note. Approve and reject
+  are unaffected.
+- **Confidence gate on Modify, verified.** `tests/test_modify_gate.py` runs
+  the real sandbox: a correct fix that starts at 0.60 passes its tests, gets
+  +0.15 = 0.75, and ends `needs_review` with a new `human_review_queue` row
+  (`low_confidence_despite_passing_tests`). The 0.95 control ends `validated`.
+  Toast reworded to say exactly this.
+- **Sandbox flags** (`run_pytest_in_sandbox`). Before: `--network none`,
+  `--memory=512m`, `--cpus=1`, `--rm`. Added: `--pids-limit=256`,
+  `--cap-drop=ALL`, `--security-opt=no-new-privileges`. Fixture runs still
+  pass. NOT done: read-only root filesystem (needs `--tmpfs` for pytest
+  temp/cache, untested) and a non-root `--user` (needs the mounted copy to be
+  readable and writable by that uid, untested).
+- **Permanent demo record.** `backend/app/seed.py` `ensure_demo_event` inserts
+  `oldapi` 1.x to 2.0 (`oldapi.legacy_call` to `oldapi.new_call`) if missing,
+  run from the FastAPI lifespan on every API start. The hand-inserted
+  `public-demo` event was removed; its file_tasks were repointed to the new
+  row. `changelog_events` has no unique constraint, so tests that use api_name
+  `oldapi` cannot collide.
+- **Landing page** has a "Try it with this example" block (path
+  `/app/tests/fixtures/step6_sample_repo`, `oldapi`, `1.x`, `2.0`).
+- `ApiError` now shows FastAPI's plain `detail` string, not raw JSON.
+
+- **Run cap (2026-10-05).** With `PUBLIC_DEMO_MODE` on, `POST /runs` returns
+  429 when 3 or more runs are `pending` or `running`. Local dev unaffected.
+  `tests/test_run_cap.py`. Known limit: a run stuck in `running` (for example
+  after a crash) counts toward the cap until it is resolved.
+- Landing page Review Queue card now states Modify is off on the public demo.
+
+**Tests added.** `test_repo_paths.py` (inside root, `..` escape, symlink
+escape, nonexistent, file, unset leaves dev unchanged, API 422s, `scan_task`
+fails the run), `test_modify_gate.py`, `test_seed.py`. The symlink test skips
+on Windows without symlink privilege; it passes in the Linux container.
+`test_repos_api.py` now saves real temp folders because nonexistent paths are
+rejected. `test_api.py` was not touched.
+
+**Gotcha.** A test whose cleanup reads `run.id` after `session.close()` raises
+`DetachedInstanceError` and leaves rows behind. Capture ids first.
+
 ## 5. Build order and status
 
 **Updated 2026-08-26:** Docker Desktop is now installed and running. `0002`
